@@ -1,22 +1,15 @@
 mod flags;
+mod filehandling;
 
 use std::env;
-use std::fs::File;
-use std::io::Read;
 use std::process;
-//use std::time::Instant;
-
+//use std::time::Instant; for timing
 
 // Thinking of things to do for this project. Not looking at the rust docs.
 // I need to open any files and check if they're valid text files
 // I can use error handling and a for loop for this ^
 // Then I need to search for the provided search term 
 
-
-struct OpenedFile {
-    search_term: String,
-    file_contents: String,
-}
 
 // TODO: Print each line to the console that contains the word
 // IMPROVE THE SEARCH ALGORITHM. A LOT. ITS N^2 LIKE THATS GUH
@@ -25,41 +18,14 @@ struct OpenedFile {
 // Color code the word
 // Implement pipe operator functionality 
 // implement flags: 
-//    -raw => print the rust dbg format 
-//    -trace => prints line numbers 
-//    -:3 => counts the number of :3's in the file (just the :3's), autoapplies trace
-//    -count => counts the number of them
+//    --raw => print the rust dbg format 
+//    --trace => prints line numbers 
+//    --:3 => counts the number of :3's in the file (just the :3's), autoapplies trace
+//    --count => counts the number of them
+//    --regex => Utilizes regex parsing 
 
-impl OpenedFile {
-    fn init(search_term: String, file_contents: String) -> OpenedFile {
-        OpenedFile{search_term, file_contents}
-    }
-    // I need to find out how to check if the word is IN another word, not just on its own.
-    // I did the latter w/my Go compiler
-    
-    // currently lists the same line twice if it has multiple things
-    // need to fix.
-    fn search_contents(&self) -> Vec<String> {
-        let mut found_words: Vec<String> = Vec::new();
-        let lines = self.file_contents.split_terminator('\n');
-        for line in lines {
-            if line.contains(&self.search_term) {
-                let output_line: String = line.replace(&self.search_term, 
-                    format!("\x1b[1;31m{}\x1b[0m", &self.search_term).as_str());
 
-                    found_words.push(output_line);
-                }        
-            }
-        found_words
-    }
-}
-
-fn open_file(file_path: &String) -> String {
-    let mut s: String = String::new();
-    File::open(file_path).unwrap().read_to_string(&mut s).expect("Could not read to string");
-    s
-}
-
+///Main potentially defers to a flag for content searching depending on the flag used.
 fn main() {
     let args: Vec<String> = env::args().collect(); //collects cli arguments 
     
@@ -67,12 +33,15 @@ fn main() {
         flags::print_help();
         process::exit(0);
     }
+    //TO FIX: SUPPORT FOR ONLY ONE FLAG
     if args[1].contains("--") {
-        flags::handle_flags(&args[1]);
+        // I want to add capability to process all of the tags at once...
+        flags::handle_flags(&args);
+        process::exit(0);
     }
-    let file_contents = open_file(&args[1]);
+    let file_contents = filehandling::open_file(&args[1]);
     let search_term = &args[2];
-    let file = OpenedFile::init(search_term.to_string(), file_contents);
+    let file = filehandling::OpenedFile::init(&args[1], search_term.to_string(), file_contents, None);
     for line in file.search_contents() {
         println!("{}", line);
     }

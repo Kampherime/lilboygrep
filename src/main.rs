@@ -29,7 +29,7 @@ struct OpenedFile {
 //    -trace => prints line numbers 
 //    -:3 => counts the number of :3's in the file (just the :3's), autoapplies trace
 //    -count => counts the number of them
-//
+
 impl OpenedFile {
     fn init(search_term: String, file_contents: String) -> OpenedFile {
         OpenedFile{search_term, file_contents}
@@ -39,16 +39,17 @@ impl OpenedFile {
     
     // currently lists the same line twice if it has multiple things
     // need to fix.
-    fn search_contents(&self) -> Vec<&str> {
-        let mut found_words: Vec<&str> = Vec::new();
+    fn search_contents(&self) -> Vec<String> {
+        let mut found_words: Vec<String> = Vec::new();
         let lines = self.file_contents.split_terminator('\n');
         for line in lines {
-            for word in line.split_whitespace() {
-                if word.contains(&self.search_term) {
-                    found_words.push(line);
-                }
-            }        
-        }
+            if line.contains(&self.search_term) {
+                let output_line: String = line.replace(&self.search_term, 
+                    format!("\x1b[1;31m{}\x1b[0m", &self.search_term).as_str());
+
+                    found_words.push(output_line);
+                }        
+            }
         found_words
     }
 }
@@ -72,7 +73,10 @@ fn main() {
     let file_contents = open_file(&args[1]);
     let search_term = &args[2];
     let file = OpenedFile::init(search_term.to_string(), file_contents);
-    dbg!(file.search_contents()/*.len()*/);
+    for line in file.search_contents() {
+        println!("{}", line);
+    }
+    //dbg!(file.search_contents()/*.len()*/);
 }
 
 
